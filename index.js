@@ -22,14 +22,22 @@ app.get('/price_data', async (req, res) => {
     const namesToFilterOut = ['Min', 'Max', 'Average', 'Peak', 'Off-peak 1', 'Off-peak 2']
     data = data.data.Rows.filter(row => !namesToFilterOut.includes(row.Name))
 
-    // filter out LTU data only
-    data = data.map(row => (
-      {
-        value: parseFloat(row.Columns.filter(col => col.Name == 'LT')[0].Value.replace(',', '.')),
-        date: new Date(row.StartTime).getHours(),
-      }
-    ))
-    res.json(data)
+    // the list of countries theres data for
+    const countries = data[0].Columns.map(col => col.CombinedName)
+
+    const data_ = {}
+    for (let idx in countries) {
+
+      // filter the data of selected country
+      let country = countries[idx]
+      data_[country] = data.map(row => (
+        {
+          value: parseFloat(row.Columns.filter(col => col.Name == country)[0].Value.replace(',', '.')),
+          date: new Date(row.StartTime).getHours(),
+        }
+      ))
+    }
+    res.json(data_)
   } catch (err) {
     res.status(500).send(err.message)
   }
